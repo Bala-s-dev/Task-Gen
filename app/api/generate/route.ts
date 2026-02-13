@@ -100,7 +100,7 @@ Return JSON ONLY:
         stories: {
           create: generated.stories.map((s: string, i: number) => ({
             content: s,
-            order: i,
+            order: i, 
           })),
         },
       },
