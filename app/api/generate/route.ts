@@ -2,11 +2,11 @@ import { NextResponse } from 'next/server';
 import { SpecSchema } from '@/lib/validators';
 import { prisma } from '@/lib/prisma';
 import { rateLimit } from '@/lib/rateLimit';
-import { gemini } from '@/lib/gemini';
+import { groq, GROQ_MODEL } from '@/lib/groq';
 
 export async function POST(req: Request) {
   try {
-    // Rate Limit
+    // Rate Limit (safe fallback works locally)
     const ip = req.headers.get('x-forwarded-for') ?? 'anonymous';
     const { success } = await rateLimit.limit(ip);
 
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
 
     const { goal, users, constraints, risks, template } = parsed.data;
 
-    // Gemini Prompt
+    // Prompt
     const prompt = `
 You are a senior product + engineering planner.
 
@@ -50,42 +50,41 @@ Constraints: ${constraints}
 Risks: ${risks ?? 'None'}
 Template: ${template}
 
-Return JSON ONLY in this exact format:
+Return JSON ONLY:
 
 {
   "stories": ["..."],
   "groups": [
-    {
-      "title": "Frontend",
-      "tasks": ["...", "..."]
-    }
+    { "title": "Frontend", "tasks": ["...", "..."] }
   ]
 }
 `;
 
-    // Gemini Model Call
-    const model = gemini.getGenerativeModel({
-      model: 'gemini-1.5-flash',
+    // Groq LLM Call
+    const chat = await groq.chat.completions.create({
+      model: GROQ_MODEL,
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.4,
     });
 
-    const result = await model.generateContent(prompt);
-
-    const raw = result.response.text();
+    const raw = chat.choices[0]?.message?.content;
 
     if (!raw) {
       return NextResponse.json(
-        { error: 'Gemini returned empty output.' },
+        { error: 'LLM returned empty output.' },
         { status: 500 },
       );
     }
 
-    // Parse JSON safely
+    // Clean JSON
+    const cleaned = raw.replace(/```json|```/g, '').trim();
+
     let generated;
     try {
-      generated = JSON.parse(raw);
+      generated = JSON.parse(cleaned);
     } catch {
       return NextResponse.json(
-        { error: 'Gemini returned invalid JSON. Try again.' },
+        { error: 'Groq returned invalid JSON. Try again.' },
         { status: 500 },
       );
     }
@@ -101,7 +100,7 @@ Return JSON ONLY in this exact format:
       },
     });
 
-    // Keep last 5 specs only
+    // Keep only last 5 specs
     const count = await prisma.spec.count();
     if (count > 5) {
       const oldest = await prisma.spec.findFirst({

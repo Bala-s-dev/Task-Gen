@@ -1,9 +1,21 @@
-import { Ratelimit } from '@upstash/ratelimit';
-import { Redis } from '@upstash/redis';
+export const rateLimit =
+  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+    ? createUpstashLimiter()
+    : {
+        limit: async () => ({ success: true }),
+      };
 
-export const redis = Redis.fromEnv();
+function createUpstashLimiter() {
+  const { Ratelimit } = require('@upstash/ratelimit');
+  const { Redis } = require('@upstash/redis');
 
-export const rateLimit = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(5, '60 s'),
-});
+  const redis = new Redis({
+    url: process.env.UPSTASH_REDIS_REST_URL,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN,
+  });
+
+  return new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(5, '60 s'),
+  });
+}

@@ -1,23 +1,23 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { gemini } from '@/lib/gemini';
+import { groq, GROQ_MODEL } from '@/lib/groq';
 
 export async function GET() {
   try {
     // DB Check
     await prisma.spec.count();
 
-    // Gemini Check
-    const model = gemini.getGenerativeModel({
-      model: 'gemini-1.5-flash',
+    // Groq Check
+    await groq.chat.completions.create({
+      model: GROQ_MODEL,
+      messages: [{ role: 'user', content: 'Say OK' }],
+      max_tokens: 5,
     });
-
-    await model.generateContent('Say OK');
 
     return NextResponse.json({
       backend: 'healthy',
       database: 'connected',
-      llm: 'gemini responding',
+      llm: 'groq responding',
     });
   } catch {
     return NextResponse.json(
