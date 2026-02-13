@@ -1,13 +1,14 @@
+// app/api/health/route.ts
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { groq, GROQ_MODEL } from '@/lib/groq';
 
 export async function GET() {
   try {
-    // DB Check
+    // 1. Database Check: Try to count records in the Spec table
     await prisma.spec.count();
 
-    // Groq Check
+    // 2. LLM Engine Check: Send a minimal test prompt to Groq
     await groq.chat.completions.create({
       model: GROQ_MODEL,
       messages: [{ role: 'user', content: 'Say OK' }],
@@ -15,17 +16,20 @@ export async function GET() {
     });
 
     return NextResponse.json({
-      backend: 'healthy',
-      database: 'connected',
-      llm: 'groq responding',
+      backend: 'ok',
+      database: 'ok',
+      llm: 'ok',
     });
-  } catch {
+  } catch (error) {
+    console.error('Health Check Error:', error);
     return NextResponse.json(
       {
-        backend: 'unhealthy',
-        error: 'Service failure',
+        backend: 'error',
+        database: 'error',
+        llm: 'error',
+        message: 'One or more services are unreachable',
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

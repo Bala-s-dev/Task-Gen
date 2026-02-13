@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import SpecForm from '@/components/SpecForm';
-import { ArrowRight, Clock, Plus, Layout } from 'lucide-react';
+// Added Activity to the imports
+import { ArrowRight, Clock, Plus, Layout, Activity } from 'lucide-react';
 
 export default function Home() {
   const router = useRouter();
@@ -17,8 +18,19 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen">
-      <div className="max-w-5xl mx-auto">
+    <div className="min-h-screen relative">
+      {/* System Status Button */}
+      <Link
+        href="/status"
+        className="fixed top-6 right-6 flex items-center gap-2 px-4 py-2 rounded-full bg-gray-900/50 border border-gray-800 hover:border-emerald-500/50 hover:bg-gray-900 transition-all group z-50"
+      >
+        <Activity size={16} className="text-emerald-500 animate-pulse" />
+        <span className="text-xs font-bold text-gray-400 group-hover:text-emerald-400 uppercase tracking-widest">
+          System Status
+        </span>
+      </Link>
+
+      <div className="max-w-5xl mx-auto px-4">
         {/* Hero Section */}
         <div className="text-center mb-12 md:mb-20 space-y-6">
           <h1 className="mt-5 text-4xl md:text-6xl font-extrabold tracking-tight bg-gradient-to-b from-white to-gray-500 bg-clip-text text-transparent">
