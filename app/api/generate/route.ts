@@ -98,7 +98,10 @@ Return JSON ONLY:
         risks,
         template,
         stories: {
-          create: generated.stories.map((s: string) => ({ content: s })),
+          create: generated.stories.map((s: string, i: number) => ({
+            content: s,
+            order: i,
+          })),
         },
       },
     });
