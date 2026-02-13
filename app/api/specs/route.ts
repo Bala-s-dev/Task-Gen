@@ -9,10 +9,10 @@ export async function GET() {
     });
 
     return NextResponse.json(specs);
-  } catch {
-    return NextResponse.json(
-      { error: 'Failed to fetch history.' },
-      { status: 500 },
-    );
+  } catch (err) {
+    console.error('HISTORY ERROR:', err);
+
+    // ✅ Return empty array instead of object
+    return NextResponse.json([]);
   }
 }

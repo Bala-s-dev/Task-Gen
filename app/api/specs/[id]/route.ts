@@ -6,41 +6,36 @@ export async function GET(
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    // ✅ unwrap params correctly (Next.js 16)
     const { id } = await context.params;
 
     const spec = await prisma.spec.findUnique({
       where: { id },
       include: {
+        stories: { orderBy: { order: 'asc' } },
         taskGroups: {
           include: {
-            tasks: {
-              orderBy: { order: 'asc' },
-            },
+            tasks: { orderBy: { order: 'asc' } },
           },
         },
       },
     });
 
     if (!spec) {
-      return NextResponse.json({ error: 'Spec not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
-
-    const output = {
-      stories: [],
-      groups: spec.taskGroups.map((g) => ({
-        title: g.title,
-        tasks: g.tasks.map((t) => t.content),
-      })),
-    };
 
     return NextResponse.json({
       specId: spec.id,
-      output,
+      output: {
+        stories: spec.stories.map((s) => s.content),
+        groups: spec.taskGroups.map((g) => ({
+          title: g.title,
+          tasks: g.tasks.map((t) => t.content),
+        })),
+      },
     });
   } catch (err) {
-    console.error('SPEC LOAD ERROR:', err);
-
+    console.error('LOAD ERROR:', err);
     return NextResponse.json({ error: 'Failed to load spec' }, { status: 500 });
   }
 }

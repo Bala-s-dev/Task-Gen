@@ -6,34 +6,32 @@ import { groq, GROQ_MODEL } from '@/lib/groq';
 
 export async function POST(req: Request) {
   try {
-    // Rate Limit (safe fallback works locally)
     const ip = req.headers.get('x-forwarded-for') ?? 'anonymous';
     const { success } = await rateLimit.limit(ip);
 
     if (!success) {
       return NextResponse.json(
-        { error: 'Too many requests. Try again soon.' },
+        { error: 'Too many requests.' },
         { status: 429 },
       );
     }
 
-    // Validate Input
     const body = await req.json();
     const parsed = SpecSchema.safeParse(body);
 
     if (!parsed.success) {
+      console.log('VALIDATION ERROR:', parsed.error.flatten().fieldErrors);
+
       return NextResponse.json(
         { error: parsed.error.flatten().fieldErrors },
         { status: 400 },
       );
     }
 
+
     const { goal, users, constraints, risks, template } = parsed.data;
 
-    // Prompt
     const prompt = `
-You are a senior product + engineering planner.
-
 Generate:
 1. 5 user stories
 2. Engineering tasks grouped into:
@@ -60,7 +58,6 @@ Return JSON ONLY:
 }
 `;
 
-    // Groq LLM Call
     const chat = await groq.chat.completions.create({
       model: GROQ_MODEL,
       messages: [{ role: 'user', content: prompt }],
@@ -68,29 +65,12 @@ Return JSON ONLY:
     });
 
     const raw = chat.choices[0]?.message?.content;
+    if (!raw) throw new Error('Empty response');
 
-    if (!raw) {
-      return NextResponse.json(
-        { error: 'LLM returned empty output.' },
-        { status: 500 },
-      );
-    }
-
-    // Clean JSON
     const cleaned = raw.replace(/```json|```/g, '').trim();
+    const generated = JSON.parse(cleaned);
 
-    let generated;
-    try {
-      generated = JSON.parse(cleaned);
-    } catch {
-      return NextResponse.json(
-        { error: 'Groq returned invalid JSON. Try again.' },
-        { status: 500 },
-      );
-    }
-
-    // Save Spec
-    // Save Spec
+    // ✅ Save Spec
     const spec = await prisma.spec.create({
       data: {
         goal,
@@ -101,7 +81,18 @@ Return JSON ONLY:
       },
     });
 
-    // Save Task Groups + Tasks
+    // ✅ Save Stories
+    for (let i = 0; i < generated.stories.length; i++) {
+      await prisma.story.create({
+        data: {
+          content: generated.stories[i],
+          order: i,
+          specId: spec.id,
+        },
+      });
+    }
+
+    // ✅ Save Groups + Tasks
     for (const group of generated.groups) {
       const createdGroup = await prisma.taskGroup.create({
         data: {
@@ -110,7 +101,6 @@ Return JSON ONLY:
         },
       });
 
-      // Save tasks inside group
       for (let i = 0; i < group.tasks.length; i++) {
         await prisma.task.create({
           data: {
@@ -128,10 +118,6 @@ Return JSON ONLY:
     });
   } catch (err) {
     console.error('GENERATE ERROR:', err);
-
-    return NextResponse.json(
-      { error: 'Internal server error.' },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: 'Generation failed.' }, { status: 500 });
   }
 }

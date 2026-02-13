@@ -16,8 +16,10 @@ model Spec {
   template    String
   createdAt   DateTime @default(now())
 
+  stories     Story[]
   taskGroups  TaskGroup[]
 }
+
 
 model TaskGroup {
   id      String @id @default(uuid())
@@ -36,4 +38,13 @@ model Task {
 
   groupId   String
   group     TaskGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+}
+
+model Story {
+  id      String @id @default(uuid())
+  content String
+  order   Int
+
+  specId  String
+  spec    Spec   @relation(fields: [specId], references: [id], onDelete: Cascade)
 }

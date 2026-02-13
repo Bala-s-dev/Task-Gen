@@ -27,8 +27,18 @@ export default function SpecForm({
     try {
       const res = await fetch('/api/generate', {
         method: 'POST',
-        body: JSON.stringify(payload),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          goal,
+          users,
+          constraints,
+          risks,
+          template,
+        }),
       });
+
 
       if (!res.ok) {
         toast.error('Invalid input or server error.');

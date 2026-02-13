@@ -12,9 +12,23 @@ export default function HistoryPanel({
 
   async function loadHistory() {
     setLoading(true);
-    const res = await fetch('/api/specs');
-    const data = await res.json();
-    setSpecs(data);
+
+    try {
+      const res = await fetch('/api/specs');
+      const data = await res.json();
+
+      // ✅ Ensure array
+      if (Array.isArray(data)) {
+        setSpecs(data);
+      } else {
+        console.error('History API returned non-array:', data);
+        setSpecs([]);
+      }
+    } catch (err) {
+      console.error('History fetch failed:', err);
+      setSpecs([]);
+    }
+
     setLoading(false);
   }
 
@@ -29,7 +43,7 @@ export default function HistoryPanel({
       {loading && <p className="text-gray-500 text-sm">Loading...</p>}
 
       {!loading && specs.length === 0 && (
-        <p className="text-gray-500 text-sm">No specs generated yet.</p>
+        <p className="text-gray-500 text-sm">No specs found yet.</p>
       )}
 
       <div className="space-y-3">
@@ -39,8 +53,8 @@ export default function HistoryPanel({
             className="w-full text-left p-3 rounded-xl bg-gray-800 hover:bg-gray-700 transition"
             onClick={async () => {
               const res = await fetch(`/api/specs/${s.id}`);
-              const data = await res.json();
-              onLoadSpec(data);
+              const full = await res.json();
+              onLoadSpec(full);
             }}
           >
             <p className="font-medium truncate">{s.goal}</p>
