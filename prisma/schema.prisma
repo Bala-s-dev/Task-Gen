@@ -43,7 +43,6 @@ model Task {
   order       Int
   isCompleted Boolean  @default(false) 
   priority    String   @default("medium") 
-  
   groupId     String
   group       TaskGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
 }
