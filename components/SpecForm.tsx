@@ -15,7 +15,6 @@ export default function SpecForm({
     setLoading(true);
 
     const form = new FormData(e.target);
-
     const payload = {
       goal: form.get('goal'),
       users: form.get('users'),
@@ -27,29 +26,25 @@ export default function SpecForm({
     try {
       const res = await fetch('/api/generate', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          goal,
-          users,
-          constraints,
-          risks,
-          template,
-        }),
+        body: JSON.stringify(payload),
       });
 
+      const data = await res.json();
+      toast.success('Project initialized!');
+      
 
       if (!res.ok) {
-        toast.error('Invalid input or server error.');
+        // Show the REAL error from the server
+        console.error('Server Error:', data);
+        toast.error(JSON.stringify(data.error) || 'Server Validation Error');
         return;
       }
 
-      const data = await res.json();
       toast.success('Tasks generated successfully!');
       onGenerated(data);
-    } catch {
-      toast.error('Something went wrong.');
+    } catch (err) {
+      console.error('Network Error:', err);
+      toast.error('Connection failed. Is the server running?');
     } finally {
       setLoading(false);
     }
@@ -66,6 +61,7 @@ export default function SpecForm({
         name="goal"
         placeholder="Goal (What are you building?)"
         required
+        minLength={10}
         className="w-full p-3 rounded-lg bg-gray-800"
       />
 
@@ -73,6 +69,7 @@ export default function SpecForm({
         name="users"
         placeholder="Target Users"
         required
+        minLength={5}
         className="w-full p-3 rounded-lg bg-gray-800"
       />
 
@@ -80,6 +77,7 @@ export default function SpecForm({
         name="constraints"
         placeholder="Constraints (time, tech, limits...)"
         required
+        minLength={5}
         className="w-full p-3 rounded-lg bg-gray-800"
       />
 
@@ -97,7 +95,7 @@ export default function SpecForm({
 
       <button
         disabled={loading}
-        className="w-full py-3 rounded-xl bg-white text-black font-semibold hover:opacity-90 transition"
+        className="w-full py-3 rounded-xl bg-white text-black font-semibold hover:opacity-90 transition disabled:opacity-50"
       >
         {loading ? 'Generating...' : 'Generate Tasks'}
       </button>

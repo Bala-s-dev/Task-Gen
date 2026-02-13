@@ -1,63 +1,82 @@
 'use client';
 
-import { DndContext, closestCenter } from '@dnd-kit/core';
-
 import {
   SortableContext,
   verticalListSortingStrategy,
-  arrayMove,
+  useSortable,
 } from '@dnd-kit/sortable';
-
+import { CSS } from '@dnd-kit/utilities';
 import SortableTask from './SortableTask';
-import { useState } from 'react';
 
-export default function TaskGroup({
-  group,
-  onUpdate,
-}: {
-  group: any;
-  onUpdate: (g: any) => void;
-}) {
-  const [tasks, setTasks] = useState(group.tasks);
+export default function TaskGroup({ group, id, onUpdate }: any) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id, data: { type: 'group' } });
 
-  function handleDragEnd(event: any) {
-    const { active, over } = event;
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    transition,
+    opacity: isDragging ? 0.3 : 1,
+  };
 
-    if (!over || active.id === over.id) return;
-
-    const oldIndex = tasks.findIndex((t) => t === active.id);
-    const newIndex = tasks.findIndex((t) => t === over.id);
-
-    const newTasks = arrayMove(tasks, oldIndex, newIndex);
-
-    setTasks(newTasks);
-    onUpdate({ ...group, tasks: newTasks });
-  }
+  // ✅ Extract IDs safely for SortableContext
+  const taskIds = group.tasks.map((t: any) =>
+    typeof t === 'string' ? t : t.id,
+  );
 
   return (
-    <div className="p-5 rounded-2xl bg-gray-900 shadow-md">
-      <h3 className="font-semibold text-lg mb-3">{group.title}</h3>
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="w-80 flex-shrink-0 flex flex-col bg-gray-900/50 border border-gray-800 rounded-2xl overflow-hidden"
+    >
+      <div
+        {...attributes}
+        {...listeners}
+        className="p-4 bg-gray-900 border-b border-gray-800 cursor-grab active:cursor-grabbing hover:bg-gray-800/80 transition"
+      >
+        <h3 className="font-bold text-gray-200 flex justify-between items-center">
+          {group.title}
+          <span className="text-xs bg-gray-800 px-2 py-1 rounded text-gray-400">
+            {group.tasks.length}
+          </span>
+        </h3>
+      </div>
 
-      <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={tasks} strategy={verticalListSortingStrategy}>
-          <div className="space-y-2">
-            {tasks.map((task: any) => (
-              <SortableTask
-                key={task}
-                id={task}
-                task={task}
-                onEdit={(val) => {
-                  const copy = [...tasks];
-                  const idx = copy.indexOf(task);
-                  copy[idx] = val;
-                  setTasks(copy);
-                  onUpdate({ ...group, tasks: copy });
-                }}
-              />
-            ))}
-          </div>
+      <div className="p-3 flex-1 space-y-2 min-h-[100px]">
+        {/* ✅ Pass IDs to SortableContext */}
+        <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
+          {group.tasks.map((task: any) => (
+            <SortableTask
+              key={typeof task === 'string' ? task : task.id}
+              id={typeof task === 'string' ? task : task.id}
+              task={task}
+              onEdit={(val: any) => {
+                const newTasks = [...group.tasks];
+                // Find index based on ID or string match
+                const idx = newTasks.findIndex(
+                  (t) =>
+                    (typeof t === 'string' ? t : t.id) ===
+                    (typeof task === 'string' ? task : task.id),
+                );
+                newTasks[idx] = val;
+                onUpdate({ ...group, tasks: newTasks });
+              }}
+            />
+          ))}
         </SortableContext>
-      </DndContext>
+
+        {group.tasks.length === 0 && (
+          <div className="text-center py-8 text-sm text-gray-600 border-2 border-dashed border-gray-800 rounded-xl">
+            Drop tasks here
+          </div>
+        )}
+      </div>
     </div>
   );
 }

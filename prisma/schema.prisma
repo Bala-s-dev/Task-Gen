@@ -20,31 +20,29 @@ model Spec {
   taskGroups  TaskGroup[]
 }
 
+model Story {
+  id          String   @id @default(uuid())
+  content     String
+  isCompleted Boolean  @default(false) 
+  specId      String
+  spec        Spec     @relation(fields: [specId], references: [id], onDelete: Cascade)
+}
 
 model TaskGroup {
   id      String @id @default(uuid())
   title   String
-
   specId  String
   spec    Spec   @relation(fields: [specId], references: [id], onDelete: Cascade)
-
   tasks   Task[]
 }
 
 model Task {
-  id        String @id @default(uuid())
-  content   String
-  order     Int
-
-  groupId   String
-  group     TaskGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
-}
-
-model Story {
-  id      String @id @default(uuid())
-  content String
-  order   Int
-
-  specId  String
-  spec    Spec   @relation(fields: [specId], references: [id], onDelete: Cascade)
+  id          String   @id @default(uuid())
+  content     String
+  order       Int
+  isCompleted Boolean  @default(false) 
+  priority    String   @default("medium") 
+  
+  groupId     String
+  group       TaskGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
 }
