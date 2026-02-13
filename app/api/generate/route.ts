@@ -1,14 +1,13 @@
 import { NextResponse } from 'next/server';
 import { SpecSchema } from '@/lib/validators';
 import { prisma } from '@/lib/prisma';
-import { openai } from '@/lib/openai';
 import { rateLimit } from '@/lib/rateLimit';
+import { gemini } from '@/lib/gemini';
 
 export async function POST(req: Request) {
   try {
-    // Rate limit (5 req/min per IP)
+    // Rate Limit
     const ip = req.headers.get('x-forwarded-for') ?? 'anonymous';
-
     const { success } = await rateLimit.limit(ip);
 
     if (!success) {
@@ -18,7 +17,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Parse + Validate Input
+    // Validate Input
     const body = await req.json();
     const parsed = SpecSchema.safeParse(body);
 
@@ -31,7 +30,7 @@ export async function POST(req: Request) {
 
     const { goal, users, constraints, risks, template } = parsed.data;
 
-    // Call OpenAI (server-side)
+    // Gemini Prompt
     const prompt = `
 You are a senior product + engineering planner.
 
@@ -51,33 +50,47 @@ Constraints: ${constraints}
 Risks: ${risks ?? 'None'}
 Template: ${template}
 
-Return JSON only:
+Return JSON ONLY in this exact format:
+
 {
- "stories": [...],
- "groups": [
-   { "title": "Frontend", "tasks": [...] }
- ]
+  "stories": ["..."],
+  "groups": [
+    {
+      "title": "Frontend",
+      "tasks": ["...", "..."]
+    }
+  ]
 }
 `;
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.4,
+    // Gemini Model Call
+    const model = gemini.getGenerativeModel({
+      model: 'gemini-1.5-flash',
     });
 
-    const raw = completion.choices[0].message.content;
+    const result = await model.generateContent(prompt);
+
+    const raw = result.response.text();
 
     if (!raw) {
       return NextResponse.json(
-        { error: 'LLM returned empty output.' },
+        { error: 'Gemini returned empty output.' },
         { status: 500 },
       );
     }
 
-    const generated = JSON.parse(raw);
+    // Parse JSON safely
+    let generated;
+    try {
+      generated = JSON.parse(raw);
+    } catch {
+      return NextResponse.json(
+        { error: 'Gemini returned invalid JSON. Try again.' },
+        { status: 500 },
+      );
+    }
 
-    // Store Spec in DB
+    // Save Spec
     const spec = await prisma.spec.create({
       data: {
         goal,
@@ -88,7 +101,7 @@ Return JSON only:
       },
     });
 
-    // Keep only last 5 specs
+    // Keep last 5 specs only
     const count = await prisma.spec.count();
     if (count > 5) {
       const oldest = await prisma.spec.findFirst({

@@ -1,25 +1,25 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { openai } from '@/lib/openai';
+import { gemini } from '@/lib/gemini';
 
 export async function GET() {
   try {
     // DB Check
     await prisma.spec.count();
 
-    // LLM Check (tiny request)
-    await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [{ role: 'user', content: 'Say OK' }],
-      max_tokens: 5,
+    // Gemini Check
+    const model = gemini.getGenerativeModel({
+      model: 'gemini-1.5-flash',
     });
+
+    await model.generateContent('Say OK');
 
     return NextResponse.json({
       backend: 'healthy',
       database: 'connected',
-      llm: 'responding',
+      llm: 'gemini responding',
     });
-  } catch (err) {
+  } catch {
     return NextResponse.json(
       {
         backend: 'unhealthy',
