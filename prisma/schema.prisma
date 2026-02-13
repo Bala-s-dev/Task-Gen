@@ -23,6 +23,7 @@ model Spec {
 model Story {
   id          String   @id @default(uuid())
   content     String
+  order       Int
   isCompleted Boolean  @default(false) 
   specId      String
   spec        Spec     @relation(fields: [specId], references: [id], onDelete: Cascade)
