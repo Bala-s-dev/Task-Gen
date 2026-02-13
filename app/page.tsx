@@ -21,11 +21,7 @@ export default function Home() {
       <div className="max-w-5xl mx-auto">
         {/* Hero Section */}
         <div className="text-center mb-12 md:mb-20 space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs md:text-sm border border-blue-500/20">
-            <Layout size={14} />
-            <span className="font-medium">v2.0 Now Available</span>
-          </div>
-          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight bg-gradient-to-b from-white to-gray-500 bg-clip-text text-transparent">
+          <h1 className="mt-5 text-4xl md:text-6xl font-extrabold tracking-tight bg-gradient-to-b from-white to-gray-500 bg-clip-text text-transparent">
             Task Generator
           </h1>
           <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
