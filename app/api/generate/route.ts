@@ -90,6 +90,7 @@ Return JSON ONLY:
     }
 
     // Save Spec
+    // Save Spec
     const spec = await prisma.spec.create({
       data: {
         goal,
@@ -100,15 +101,24 @@ Return JSON ONLY:
       },
     });
 
-    // Keep only last 5 specs
-    const count = await prisma.spec.count();
-    if (count > 5) {
-      const oldest = await prisma.spec.findFirst({
-        orderBy: { createdAt: 'asc' },
+    // Save Task Groups + Tasks
+    for (const group of generated.groups) {
+      const createdGroup = await prisma.taskGroup.create({
+        data: {
+          title: group.title,
+          specId: spec.id,
+        },
       });
 
-      if (oldest) {
-        await prisma.spec.delete({ where: { id: oldest.id } });
+      // Save tasks inside group
+      for (let i = 0; i < group.tasks.length; i++) {
+        await prisma.task.create({
+          data: {
+            content: group.tasks[i],
+            order: i,
+            groupId: createdGroup.id,
+          },
+        });
       }
     }
 
