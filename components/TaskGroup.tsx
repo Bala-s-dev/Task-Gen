@@ -24,7 +24,6 @@ export default function TaskGroup({ group, id, onUpdate }: any) {
     opacity: isDragging ? 0.3 : 1,
   };
 
-  // ✅ Extract IDs safely for SortableContext
   const taskIds = group.tasks.map((t: any) =>
     typeof t === 'string' ? t : t.id,
   );
@@ -33,23 +32,22 @@ export default function TaskGroup({ group, id, onUpdate }: any) {
     <div
       ref={setNodeRef}
       style={style}
-      className="w-80 flex-shrink-0 flex flex-col bg-gray-900/50 border border-gray-800 rounded-2xl overflow-hidden"
+      className="w-80 flex-shrink-0 flex flex-col bg-gray-900/40 border border-gray-800 rounded-2xl overflow-hidden shadow-sm"
     >
       <div
         {...attributes}
         {...listeners}
-        className="p-4 bg-gray-900 border-b border-gray-800 cursor-grab active:cursor-grabbing hover:bg-gray-800/80 transition"
+        className="p-5 bg-gray-900/80 border-b border-gray-800 cursor-grab active:cursor-grabbing hover:bg-gray-800/50 transition-colors"
       >
-        <h3 className="font-bold text-gray-200 flex justify-between items-center">
+        <h3 className="font-bold text-gray-100 flex justify-between items-center text-sm uppercase tracking-wider">
           {group.title}
-          <span className="text-xs bg-gray-800 px-2 py-1 rounded text-gray-400">
+          <span className="text-[10px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full">
             {group.tasks.length}
           </span>
         </h3>
       </div>
 
-      <div className="p-3 flex-1 space-y-2 min-h-[100px]">
-        {/* ✅ Pass IDs to SortableContext */}
+      <div className="p-4 flex-1 space-y-3 min-h-[150px] bg-gray-950/20">
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
           {group.tasks.map((task: any) => (
             <SortableTask
@@ -58,7 +56,6 @@ export default function TaskGroup({ group, id, onUpdate }: any) {
               task={task}
               onEdit={(val: any) => {
                 const newTasks = [...group.tasks];
-                // Find index based on ID or string match
                 const idx = newTasks.findIndex(
                   (t) =>
                     (typeof t === 'string' ? t : t.id) ===
@@ -72,8 +69,8 @@ export default function TaskGroup({ group, id, onUpdate }: any) {
         </SortableContext>
 
         {group.tasks.length === 0 && (
-          <div className="text-center py-8 text-sm text-gray-600 border-2 border-dashed border-gray-800 rounded-xl">
-            Drop tasks here
+          <div className="flex flex-col items-center justify-center py-10 text-xs text-gray-600 border-2 border-dashed border-gray-800/50 rounded-xl bg-gray-900/20">
+            <p>Drop tasks here</p>
           </div>
         )}
       </div>

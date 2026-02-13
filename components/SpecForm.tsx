@@ -30,13 +30,10 @@ export default function SpecForm({
       });
 
       const data = await res.json();
-      toast.success('Project initialized!');
-      
 
       if (!res.ok) {
-        // Show the REAL error from the server
         console.error('Server Error:', data);
-        toast.error(JSON.stringify(data.error) || 'Server Validation Error');
+        toast.error(data.error || 'Server Validation Error');
         return;
       }
 
@@ -50,54 +47,77 @@ export default function SpecForm({
     }
   }
 
+  const inputClasses =
+    'w-full p-4 rounded-xl bg-gray-800/50 border border-gray-700/50 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:bg-gray-800 transition-all outline-none placeholder:text-gray-500 text-gray-200';
+
   return (
     <form
       onSubmit={handleSubmit}
-      className="p-6 rounded-2xl bg-gray-900 space-y-4 shadow-lg"
+      className="p-8 rounded-3xl bg-gray-900/80 border border-gray-800 space-y-5 shadow-2xl backdrop-blur-sm"
     >
-      <h2 className="text-xl font-semibold">Feature Spec</h2>
+      <div className="space-y-4">
+        <textarea
+          name="goal"
+          placeholder="Goal (What are you building?)"
+          required
+          minLength={10}
+          rows={3}
+          className={inputClasses}
+        />
 
-      <textarea
-        name="goal"
-        placeholder="Goal (What are you building?)"
-        required
-        minLength={10}
-        className="w-full p-3 rounded-lg bg-gray-800"
-      />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <textarea
+            name="users"
+            placeholder="Target Users"
+            required
+            minLength={5}
+            rows={2}
+            className={inputClasses}
+          />
+          <textarea
+            name="constraints"
+            placeholder="Constraints (time, tech...)"
+            required
+            minLength={5}
+            rows={2}
+            className={inputClasses}
+          />
+        </div>
 
-      <textarea
-        name="users"
-        placeholder="Target Users"
-        required
-        minLength={5}
-        className="w-full p-3 rounded-lg bg-gray-800"
-      />
+        <textarea
+          name="risks"
+          placeholder="Risks / Unknowns (optional)"
+          rows={2}
+          className={inputClasses}
+        />
 
-      <textarea
-        name="constraints"
-        placeholder="Constraints (time, tech, limits...)"
-        required
-        minLength={5}
-        className="w-full p-3 rounded-lg bg-gray-800"
-      />
-
-      <textarea
-        name="risks"
-        placeholder="Risks / Unknowns (optional)"
-        className="w-full p-3 rounded-lg bg-gray-800"
-      />
-
-      <select name="template" className="w-full p-3 rounded-lg bg-gray-800">
-        <option value="web">Web App</option>
-        <option value="mobile">Mobile App</option>
-        <option value="internal">Internal Tool</option>
-      </select>
+        <div className="relative">
+          <select
+            name="template"
+            className={`${inputClasses} appearance-none cursor-pointer`}
+          >
+            <option value="web">🌐 Web App Template</option>
+            <option value="mobile">📱 Mobile App Template</option>
+            <option value="internal">🛠️ Internal Tool Template</option>
+          </select>
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
+            ▼
+          </div>
+        </div>
+      </div>
 
       <button
         disabled={loading}
-        className="w-full py-3 rounded-xl bg-white text-black font-semibold hover:opacity-90 transition disabled:opacity-50"
+        className="w-full py-4 rounded-2xl bg-white text-black font-bold hover:bg-gray-200 active:scale-[0.98] transition-all disabled:opacity-50 disabled:active:scale-100 shadow-xl shadow-white/5"
       >
-        {loading ? 'Generating...' : 'Generate Tasks'}
+        {loading ? (
+          <span className="flex items-center justify-center gap-2">
+            <span className="w-4 h-4 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+            Generating Tasks...
+          </span>
+        ) : (
+          'Generate Technical Plan'
+        )}
       </button>
     </form>
   );

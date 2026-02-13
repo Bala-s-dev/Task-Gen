@@ -36,7 +36,6 @@ export default function TaskBoard({
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeTask, setActiveTask] = useState<any>(null);
 
-  // Sync state if output changes (e.g. switching history)
   useEffect(() => {
     if (output?.groups) setGroups(output.groups);
   }, [output]);
@@ -50,12 +49,13 @@ export default function TaskBoard({
 
   const groupIds = useMemo(() => groups.map((g) => g.id || g.title), [groups]);
 
-  // Helper to safely get ID from a task (string or object)
   const getTaskId = (task: any) => (typeof task === 'string' ? task : task.id);
 
+  // ✅ FIXED: Corrected scope of 'g'
   function findGroup(id: string) {
-    if (groups.find((g) => (g.id || g.title) === id)) return g;
-    // Updated to find task by ID inside object list
+    const directGroup = groups.find((g) => (g.id || g.title) === id);
+    if (directGroup) return directGroup;
+
     return groups.find((g) => g.tasks.some((t: any) => getTaskId(t) === id));
   }
 
@@ -105,7 +105,6 @@ export default function TaskBoard({
         newIndex = newOverTasks.length + 1;
       }
 
-      // Move the actual Task Object
       const [movedTask] = newActiveTasks.splice(activeTaskIndex, 1);
       newOverTasks.splice(newIndex, 0, movedTask);
 
@@ -127,7 +126,6 @@ export default function TaskBoard({
     const activeGroupId = active.id as string;
     const overGroupId = over.id as string;
 
-    // Group Reorder
     if (groups.some((g) => (g.id || g.title) === activeGroupId)) {
       if (activeGroupId !== overGroupId) {
         const oldIndex = groups.findIndex(
@@ -141,7 +139,6 @@ export default function TaskBoard({
       return;
     }
 
-    // Task Reorder
     const activeGroup = findGroup(active.id as string);
     const overGroup = findGroup(over.id as string);
 
@@ -170,17 +167,21 @@ export default function TaskBoard({
   };
 
   return (
-    <div className="space-y-8">
-      {/* ✅ FIX: Render User Stories correctly (Handle Objects) */}
-      <div className="p-6 rounded-2xl bg-gray-900 border border-gray-800">
-        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-          <span className="text-blue-400">#</span> User Stories
+    <div className="space-y-10">
+      <div className="p-8 rounded-3xl bg-gray-900/40 border border-gray-800 backdrop-blur-sm">
+        <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+          <span className="w-2 h-6 bg-blue-500 rounded-full" />
+          User Stories
         </h2>
-        <ul className="space-y-2">
+        <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {output.stories?.map((s: any, i: number) => (
-            <li key={i} className="flex gap-3 text-gray-300">
-              <span className="text-gray-500 mt-1">•</span>
-              {/* Check if s is string or object */}
+            <li
+              key={i}
+              className="flex gap-4 p-4 rounded-xl bg-gray-800/30 border border-gray-700/30 text-gray-300 text-sm leading-relaxed"
+            >
+              <span className="text-blue-500 font-mono font-bold">
+                {i + 1}.
+              </span>
               <span>{typeof s === 'string' ? s : s.content}</span>
             </li>
           ))}
@@ -194,7 +195,7 @@ export default function TaskBoard({
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className="overflow-x-auto pb-4">
+        <div className="overflow-x-auto pb-8 -mx-4 px-4 scroll-smooth">
           <SortableContext
             items={groupIds}
             strategy={horizontalListSortingStrategy}
@@ -222,13 +223,13 @@ export default function TaskBoard({
           <DragOverlay dropAnimation={dropAnimation}>
             {activeId ? (
               activeTask ? (
-                <div className="p-3 bg-gray-800 rounded-lg shadow-2xl border border-blue-500/50 rotate-2 cursor-grabbing text-white">
+                <div className="p-4 bg-blue-600 rounded-xl shadow-2xl border border-blue-400/50 rotate-3 cursor-grabbing text-white text-sm font-medium">
                   {typeof activeTask === 'string'
                     ? activeTask
                     : activeTask.content}
                 </div>
               ) : (
-                <div className="w-80 h-full bg-gray-900/90 rounded-2xl border border-gray-700 shadow-2xl p-5" />
+                <div className="w-80 h-full bg-gray-900/90 rounded-2xl border border-gray-700 shadow-2xl p-5 backdrop-blur-md" />
               )
             ) : null}
           </DragOverlay>,
@@ -236,7 +237,6 @@ export default function TaskBoard({
         )}
       </DndContext>
 
-      {/* Pass corrected data to ExportBox */}
       <ExportBox groups={groups} stories={output.stories} />
     </div>
   );

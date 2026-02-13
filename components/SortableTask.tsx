@@ -4,7 +4,6 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, CheckCircle2, Circle } from 'lucide-react';
 import { useState } from 'react';
-import { debounce } from '@/lib/rateLimit'; // Or use simple timeout
 
 export default function SortableTask({
   id,
@@ -12,7 +11,7 @@ export default function SortableTask({
   onEdit,
 }: {
   id: string;
-  task: any; // Now an object, not a string
+  task: any;
   onEdit: (val: any) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } =
@@ -26,22 +25,16 @@ export default function SortableTask({
   const [content, setContent] = useState(task.content);
   const [completed, setCompleted] = useState(task.isCompleted);
 
-  // Handle Checkbox Click
   const toggleComplete = async () => {
     const newState = !completed;
     setCompleted(newState);
-
-    // Optimistic UI update
     onEdit({ ...task, isCompleted: newState });
-
-    // API Call
     await fetch(`/api/tasks/${task.id}`, {
       method: 'PATCH',
       body: JSON.stringify({ isCompleted: newState }),
     });
   };
 
-  // Handle Text Edit (Debounced save recommended in real app)
   const handleBlur = async () => {
     if (content !== task.content) {
       onEdit({ ...task, content });
@@ -57,36 +50,33 @@ export default function SortableTask({
       ref={setNodeRef}
       style={style}
       className={`
-        group flex items-start gap-2 p-3 rounded-lg border transition-all
+        group flex items-start gap-3 p-4 rounded-xl border transition-all duration-200
         ${
           completed
-            ? 'bg-gray-900/50 border-gray-800 opacity-60'
-            : 'bg-gray-800 border-gray-700 hover:border-blue-500/30'
+            ? 'bg-gray-900/30 border-gray-800 opacity-60'
+            : 'bg-gray-800/50 border-gray-700/50 hover:border-blue-500/40 hover:bg-gray-800 shadow-sm'
         }
       `}
     >
-      {/* Drag Handle */}
       <button
         {...attributes}
         {...listeners}
-        className="mt-1 cursor-grab active:cursor-grabbing"
+        className="mt-1.5 cursor-grab active:cursor-grabbing p-1 -ml-2 rounded hover:bg-gray-700/50 transition-colors"
       >
-        <GripVertical className="w-4 h-4 text-gray-600 group-hover:text-gray-400" />
+        <GripVertical className="w-3.5 h-3.5 text-gray-600 group-hover:text-gray-400" />
       </button>
 
-      {/* Checkbox */}
       <button
         onClick={toggleComplete}
-        className="mt-1 text-gray-500 hover:text-blue-400 transition"
+        className="mt-1 text-gray-500 hover:text-blue-400 transition-colors transform active:scale-90"
       >
         {completed ? (
-          <CheckCircle2 size={16} className="text-green-500" />
+          <CheckCircle2 size={18} className="text-emerald-500" />
         ) : (
-          <Circle size={16} />
+          <Circle size={18} />
         )}
       </button>
 
-      {/* Content Input */}
       <div className="flex-1 min-w-0">
         <textarea
           value={content}
@@ -94,23 +84,22 @@ export default function SortableTask({
           onBlur={handleBlur}
           rows={1}
           className={`
-            w-full bg-transparent outline-none resize-none overflow-hidden leading-relaxed
-            ${completed ? 'line-through text-gray-500' : 'text-gray-200'}
+            w-full bg-transparent outline-none resize-none overflow-hidden leading-snug text-sm
+            ${completed ? 'line-through text-gray-500' : 'text-gray-200 focus:text-white'}
           `}
-          style={{ minHeight: '24px' }}
+          style={{ minHeight: '20px' }}
         />
 
-        {/* Priority Badge (Optional Visual) */}
-        <div className="flex gap-2 mt-1">
+        <div className="flex items-center gap-2 mt-2">
           <span
             className={`
-             text-[10px] uppercase font-bold px-1.5 py-0.5 rounded border
+             text-[9px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-md border
              ${
                task.priority === 'high'
                  ? 'bg-red-500/10 text-red-400 border-red-500/20'
                  : task.priority === 'low'
                    ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-                   : 'bg-gray-700 text-gray-400 border-gray-600'
+                   : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
              }
            `}
           >

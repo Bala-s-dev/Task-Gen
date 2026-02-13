@@ -17,31 +17,31 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
-      {/* Hero Section */}
-      <div className="max-w-5xl mx-auto px-6 py-16">
-        <div className="text-center mb-16 space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-sm border border-blue-500/20">
+    <div className="min-h-screen">
+      <div className="max-w-5xl mx-auto">
+        {/* Hero Section */}
+        <div className="text-center mb-12 md:mb-20 space-y-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs md:text-sm border border-blue-500/20">
             <Layout size={14} />
-            <span>v2.0 Now Available</span>
+            <span className="font-medium">v2.0 Now Available</span>
           </div>
-          <h1 className="text-6xl font-bold tracking-tight bg-gradient-to-r from-white to-gray-500 bg-clip-text text-transparent">
+          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight bg-gradient-to-b from-white to-gray-500 bg-clip-text text-transparent">
             Task Generator
           </h1>
-          <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
             Transform feature ideas into professional engineering plans.
             AI-generated user stories, Kanban boards, and exportable specs.
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-12">
           {/* Left: New Project Form */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-blue-600 rounded-lg">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-blue-600 rounded-xl shadow-lg shadow-blue-900/20">
                 <Plus size={20} className="text-white" />
               </div>
-              <h2 className="text-2xl font-semibold">New Project</h2>
+              <h2 className="text-2xl font-bold">New Project</h2>
             </div>
 
             <SpecForm
@@ -53,31 +53,35 @@ export default function Home() {
 
           {/* Right: Recent History */}
           <div className="space-y-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-gray-800 rounded-lg">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-gray-800 rounded-xl">
                 <Clock size={20} className="text-gray-400" />
               </div>
-              <h2 className="text-2xl font-semibold">Recent Plans</h2>
+              <h2 className="text-2xl font-bold">Recent Plans</h2>
             </div>
 
             <div className="space-y-3">
               {history.length === 0 && (
-                <p className="text-gray-500 italic">No projects yet.</p>
+                <div className="p-8 text-center border-2 border-dashed border-gray-800 rounded-2xl">
+                  <p className="text-gray-500 italic text-sm">
+                    No projects yet.
+                  </p>
+                </div>
               )}
               {history.map((spec) => (
                 <Link
                   key={spec.id}
                   href={`/project/${spec.id}/stories`}
-                  className="group block p-4 rounded-xl bg-gray-900 border border-gray-800 hover:border-blue-500/50 transition-all hover:shadow-lg hover:shadow-blue-500/10"
+                  className="group block p-5 rounded-2xl bg-gray-900/50 border border-gray-800 hover:border-blue-500/50 transition-all duration-300 hover:bg-gray-900"
                 >
-                  <h3 className="font-medium truncate pr-4 text-gray-200 group-hover:text-white">
+                  <h3 className="font-semibold truncate pr-4 text-gray-200 group-hover:text-blue-400 transition-colors">
                     {spec.goal}
                   </h3>
-                  <div className="flex justify-between items-center mt-3 text-xs text-gray-500">
+                  <div className="flex justify-between items-center mt-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
                     <span>{new Date(spec.createdAt).toLocaleDateString()}</span>
                     <ArrowRight
-                      size={14}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity text-blue-400"
+                      size={16}
+                      className="-translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all text-blue-400"
                     />
                   </div>
                 </Link>
